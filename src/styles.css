@@ -112,3 +112,44 @@ html{scroll-padding-top:154px}
     padding: 16px 12px !important;
   }
 }
+
+
+
+/* Fix pricing cards */
+
+.ledger-price-card {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 20px;
+  border: none;
+  background: transparent;
+}
+
+.ledger-price-card > div {
+  min-width: 0;
+  padding: 28px;
+  border: 1px solid #d9e2ef;
+  border-radius: 16px;
+  background: #ffffff;
+}
+
+@media (max-width: 768px) {
+  .ledger-price-card {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+/* Fix duplicate dividers between review sections */
+
+.ledger-review-section.v2-process {
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+
+.ledger-review-section.v2-process + .ledger-review-section {
+  border-top: 1px solid #e2e8f0;
+  margin-top: 32px;
+  padding-top: 40px;
+}

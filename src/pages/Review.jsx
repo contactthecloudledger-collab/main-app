@@ -1,54 +1,94 @@
-import React, { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import React, { useState } from "react";
+import { Link, useParams } from "react-router-dom";
 import {
   ArrowRight,
-  Check,
   ExternalLink,
   Star,
   ChevronRight,
   CheckCircle2,
   XCircle,
-} from 'lucide-react';
+} from "lucide-react";
 
-import { tools, getTool } from '../data/tools';
-import { ToolLogo } from '../components/UI';
+import { tools, getTool } from "../data/tools";
+import { ToolLogo } from "../components/UI";
 
 const anchors = [
-  ['overview', 'Overview'],
-  ['verdict', 'Our verdict'],
-  ['features', 'Key features'],
-  ['pricing', 'Pricing'],
-  ['facts', 'Fact sheet'],
-  ['alternatives', 'Alternatives'],
-  ['reader-reviews', 'Reader reviews'],
+  ["overview", "Overview"],
+  ["verdict", "Our verdict"],
+  ["features", "Key features"],
+  ["pricing", "Pricing"],
+  ["facts", "Fact sheet"],
+  ["alternatives", "Alternatives"],
+  ["reader-reviews", "Reader reviews"],
 ];
+
+const formatFactLabel = (key) =>
+  key
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/^./, (character) => character.toUpperCase());
 
 export default function Review() {
   const { slug } = useParams();
-  const tool = getTool(slug) || tools[0];
-  const others = tools.filter((x) => x.slug !== tool.slug).slice(0, 4);
 
-  // Review form state
+  const tool = getTool(slug);
+
   const [rating, setRating] = useState(0);
   const [submitted, setSubmitted] = useState(false);
-  const [title, setTitle] = useState('');
-  const [body, setBody] = useState('');
-  const [name, setName] = useState('');
-  const [role, setRole] = useState('');
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
+  const [name, setName] = useState("");
+  const [role, setRole] = useState("");
   const [confirmed, setConfirmed] = useState(false);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  if (!tool) {
+    return (
+      <main className="ledger-review">
+        <div className="ledger-wrap">
+          <h1>Review not found</h1>
+          <p>The requested software review is not available.</p>
+          <Link to="/reviews">Browse reviews</Link>
+        </div>
+      </main>
+    );
+  }
 
-    // Demo submission only. No data is sent to a server.
+  const others = [
+    ...(tool.alternatives || [])
+      .map((alternativeSlug) => getTool(alternativeSlug))
+      .filter(Boolean),
+    ...tools.filter(
+      (item) =>
+        item.slug !== tool.slug &&
+        !(tool.alternatives || []).includes(item.slug)
+    ),
+  ].slice(0, 4);
+
+  const factRows = tool.facts
+    ? Object.entries(tool.facts).map(([key, value]) => [
+        formatFactLabel(key),
+        value,
+      ])
+    : [
+        ["Product", tool.name],
+        ["Category", tool.category],
+        ["Best for", tool.best],
+        ["Pricing", tool.price],
+        ["Cloud cost focus", tool.tag],
+        ["Notable features", tool.features.join(", ")],
+        ["Website", tool.domain],
+      ];
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+
+    // Demo only. No review is saved or sent to a server.
     setSubmitted(true);
 
-    // Reset all form fields
     setRating(0);
-    setTitle('');
-    setBody('');
-    setName('');
-    setRole('');
+    setTitle("");
+    setBody("");
+    setName("");
+    setRole("");
     setConfirmed(false);
   };
 
@@ -58,9 +98,13 @@ export default function Review() {
         {/* Breadcrumb */}
         <div className="ledger-crumb">
           <Link to="/">Home</Link>
+
           <ChevronRight size={13} />
+
           <Link to="/reviews">Reviews</Link>
+
           <ChevronRight size={13} />
+
           <span>{tool.name}</span>
         </div>
 
@@ -77,8 +121,12 @@ export default function Review() {
               <h1>{tool.name} review</h1>
 
               <div className="ledger-badges">
-                <span>#{tool.rank} in our directory</span>
+                {tool.rank != null && (
+                  <span>#{tool.rank} in our directory</span>
+                )}
+
                 <span>{tool.category}</span>
+
                 <span>Cloud cost optimization</span>
               </div>
 
@@ -93,25 +141,27 @@ export default function Review() {
             </div>
 
             <div className="ledger-meter">
-              <i style={{ width: `${tool.score * 10}%` }} />
+              <i
+                style={{
+                  width: `${tool.score * 10}%`,
+                }}
+              />
             </div>
 
             <a
               className="ledger-btn"
               href={tool.url}
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
             >
               Visit {tool.name}
               <ExternalLink size={15} />
             </a>
-
-            <small>Ratings are provisional until hands-on testing.</small>
           </div>
         </div>
       </div>
 
-      {/* Sticky Section Navigation */}
+      {/* Sticky Navigation */}
       <div className="ledger-review-tabs">
         <div className="ledger-wrap">
           {anchors.map(([id, label]) => (
@@ -126,7 +176,10 @@ export default function Review() {
         <div className="ledger-wrap ledger-review-grid">
           <article>
             {/* Overview */}
-            <section id="overview" className="ledger-review-section">
+            <section
+              id="overview"
+              className="ledger-review-section"
+            >
               <div className="ledger-pros-cons">
                 <div>
                   <h3>Where it shines</h3>
@@ -151,65 +204,80 @@ export default function Review() {
                 </div>
               </div>
 
-              <div className="ledger-product-visual">
-                <div className="ledger-product-visual-top">
-                  <span>PRODUCT CAPABILITY OVERVIEW</span>
-                  <span>{tool.category}</span>
-                </div>
+              {/* Actual Product Screenshot */}
+              <div
+                className="ledger-product-visual"
+                style={{
+                  padding: 0,
+                  minHeight: 0,
+                  height: "auto",
+                  overflow: "hidden",
+                  background: "#fff",
+                }}
+              >
+                {tool.screenshot ? (
+                  <img
+                    src={tool.screenshot}
+                    alt={`${tool.name} product interface screenshot`}
+                    loading="lazy"
+                    decoding="async"
+                    style={{
+                      display: "block",
+                      width: "100%",
+                      maxWidth: "100%",
+                      height: "auto",
+                      objectFit: "contain",
+                    }}
+                  />
+                ) : (
+                  <div className="ledger-product-visual-content">
+                    <ToolLogo tool={tool} size="large" />
 
-                <div className="ledger-product-visual-content">
-                  <ToolLogo tool={tool} size="large" />
+                    <h3>{tool.name}</h3>
 
-                  <h3>{tool.name}</h3>
-                  <p>{tool.tag}</p>
-
-                  <div className="ledger-capabilities">
-                    {tool.features.map((feature) => (
-                      <span key={feature}>
-                        <Check size={15} />
-                        {feature}
-                      </span>
-                    ))}
+                    <p>{tool.tag}</p>
                   </div>
-                </div>
+                )}
               </div>
 
               <small className="ledger-visual-caption">
-                Feature summary graphic, not an actual vendor dashboard screenshot.
+                {tool.name} product interface image.
+                Features and interface may change.
               </small>
             </section>
 
             {/* Editorial Verdict */}
-            <section id="verdict" className="ledger-review-section">
-              <span className="ledger-overline">EDITORIAL ASSESSMENT</span>
+            <section
+              id="verdict"
+              className="ledger-review-section"
+            >
+              <span className="ledger-overline">
+                EDITORIAL ASSESSMENT
+              </span>
 
               <h2>Our verdict on {tool.name}</h2>
 
               <p>
-                {tool.name} focuses on {tool.category.toLowerCase()}.{' '}
-                {tool.summary}
+                {tool.verdict ||
+                  `${tool.name} focuses on ${tool.category.toLowerCase()}. ${tool.summary}`}
               </p>
 
               <p>
-                For teams evaluating cloud spending tools, the important
-                question is whether the platform addresses the largest source
-                of waste in their environment. {tool.name} is particularly
-                relevant for {tool.best.toLowerCase()}.
-              </p>
-
-              <p>
-                We recommend checking supported cloud services, access
-                requirements and commercial terms with the vendor before
-                choosing a platform. A thorough hands-on review should also
-                validate the actual savings and day-to-day workflows.
+                {tool.name} is particularly relevant for{" "}
+                {tool.best.toLowerCase()}.
               </p>
 
               <div className="ledger-callout">
-                <h3>Why {tool.name} makes the shortlist</h3>
+                <h3>
+                  Why {tool.name} makes the shortlist
+                </h3>
 
                 <p>
-                  {tool.tag}. Its primary strengths include{' '}
-                  {tool.pros.slice(0, 3).join(', ').toLowerCase()}.
+                  {tool.rankingReason ||
+                    `${tool.tag}. Its primary strengths include ${tool.pros
+                      .slice(0, 3)
+                      .join(", ")
+                      .toLowerCase()}.`}
                 </p>
 
                 <Link to="/how-we-test">
@@ -220,28 +288,35 @@ export default function Review() {
             </section>
 
             {/* Key Features */}
-            <section id="features" className="ledger-review-section">
-              <span className="ledger-overline">WHAT IT DOES</span>
+            <section
+              id="features"
+              className="ledger-review-section"
+            >
+              <span className="ledger-overline">
+                WHAT IT DOES
+              </span>
 
               <h2>Key features and capabilities</h2>
 
               <p>
-                These are the product capabilities worth exploring in a demo
-                or trial.
+                These are the product capabilities worth
+                exploring in a demo or trial.
               </p>
 
               <div className="ledger-feature-list">
                 {tool.features.map((feature, index) => (
                   <div key={feature}>
-                    <span>{String(index + 1).padStart(2, '0')}</span>
+                    <span>
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
 
                     <div>
                       <h3>{feature}</h3>
 
                       <p>
-                        Assess how this capability works for your accounts,
-                        workloads and approval process. Ask the vendor for an
-                        example using your own cloud billing profile.
+                        Ask the vendor how this capability
+                        works for your accounts, workloads,
+                        permissions and approval process.
                       </p>
                     </div>
                   </div>
@@ -250,31 +325,48 @@ export default function Review() {
             </section>
 
             {/* Pricing */}
-            <section id="pricing" className="ledger-review-section">
-              <span className="ledger-overline">COMMERCIAL DETAILS</span>
+            <section
+              id="pricing"
+              className="ledger-review-section"
+            >
+              <span className="ledger-overline">
+                COMMERCIAL DETAILS
+              </span>
 
               <h2>{tool.name} pricing</h2>
 
               <div className="ledger-pricing-pills">
                 <span>{tool.category}</span>
-                <span>Confirm current terms with vendor</span>
+
+                <span>
+                  Confirm current terms with vendor
+                </span>
               </div>
 
-              <p>
-                {tool.price}. Pricing structures and eligibility can change.
-                Confirm the latest fees, any minimum commitments and billing
-                terms with the vendor.
-              </p>
+              <p>{tool.pricingDetails || tool.price}</p>
 
               <div className="ledger-price-card">
                 <div>
                   <h3>Questions to ask before buying</h3>
 
                   <ul>
-                    <li>How is eligible cloud spend calculated?</li>
-                    <li>Are there onboarding fees or minimum commitments?</li>
-                    <li>What happens if usage falls unexpectedly?</li>
-                    <li>Which cloud accounts and services are supported?</li>
+                    <li>
+                      How is eligible cloud spend calculated?
+                    </li>
+
+                    <li>
+                      Are there onboarding fees or minimum
+                      commitments?
+                    </li>
+
+                    <li>
+                      What happens if usage falls unexpectedly?
+                    </li>
+
+                    <li>
+                      Which cloud accounts and services
+                      are supported?
+                    </li>
                   </ul>
                 </div>
 
@@ -282,15 +374,15 @@ export default function Review() {
                   <h3>Official pricing information</h3>
 
                   <p>
-                    Review the vendor's published pricing or request a
-                    tailored assessment.
+                    Review the vendor's published pricing
+                    or request a tailored assessment.
                   </p>
 
                   <a
                     className="ledger-btn ledger-btn-outline"
                     href={tool.url}
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noopener noreferrer"
                   >
                     See vendor website
                     <ExternalLink size={15} />
@@ -301,26 +393,28 @@ export default function Review() {
 
             {/* Implementation Roadmap */}
             <section className="ledger-review-section v2-process">
-              <span className="ledger-overline">IMPLEMENTATION ROADMAP</span>
+              <span className="ledger-overline">
+                IMPLEMENTATION ROADMAP
+              </span>
 
               <h2>What getting started looks like</h2>
 
               <div className="v2-process-list">
                 {[
                   [
-                    '01',
-                    'Discover your cost baseline',
-                    'Review the accounts, workloads and billing dimensions that matter.',
+                    "01",
+                    "Discover your cost baseline",
+                    "Review the accounts, workloads and billing dimensions that matter.",
                   ],
                   [
-                    '02',
-                    'Validate fit and permissions',
-                    'Confirm supported services, access scope and the product workflow.',
+                    "02",
+                    "Validate fit and permissions",
+                    "Confirm supported services, access scope and the product workflow.",
                   ],
                   [
-                    '03',
-                    'Measure and improve',
-                    'Track savings, coverage and ongoing optimization results.',
+                    "03",
+                    "Measure and improve",
+                    "Track savings, coverage and ongoing optimization results.",
                   ],
                 ].map(([number, heading, description]) => (
                   <div key={number}>
@@ -336,21 +430,32 @@ export default function Review() {
             </section>
 
             {/* Fact Sheet */}
-            <section id="facts" className="ledger-review-section">
-              <span className="ledger-overline">PRODUCT PROFILE</span>
+            <section
+              id="facts"
+              className="ledger-review-section"
+            >
+              <span className="ledger-overline">
+                PRODUCT PROFILE
+              </span>
 
               <h2>{tool.name} fact sheet</h2>
 
               <div className="ledger-facts">
                 {[
-                  ['Product', tool.name],
-                  ['Category', tool.category],
-                  ['Best for', tool.best],
-                  ['Pricing', tool.price],
-                  ['Cloud cost focus', tool.tag],
-                  ['Notable features', tool.features.join(', ')],
-                  ['Website', tool.domain],
-                  ['Last editorial update', 'October 2026'],
+                  ["Product", tool.name],
+                  ["Category", tool.category],
+                  ["Best for", tool.best],
+                  ["Pricing", tool.price],
+                  ...factRows.filter(
+                    ([key]) =>
+                      ![
+                        "Product",
+                        "Category",
+                        "Best for",
+                        "Pricing",
+                      ].includes(key)
+                  ),
+                  ["Website", tool.domain],
                 ].map(([key, value]) => (
                   <div key={key}>
                     <strong>{key}</strong>
@@ -362,14 +467,16 @@ export default function Review() {
 
             {/* Comparison */}
             <section className="ledger-review-section">
-              <span className="ledger-overline">COMPARISON</span>
+              <span className="ledger-overline">
+                COMPARISON
+              </span>
 
               <h2>How {tool.name} compares</h2>
 
               <p>
-                Different products solve different parts of the FinOps
-                workflow. Compare them by core use case rather than rating
-                alone.
+                Different products solve different parts
+                of the FinOps workflow. Compare them by
+                core use case rather than rating alone.
               </p>
 
               <div className="ledger-table-wrap">
@@ -384,31 +491,46 @@ export default function Review() {
                   </thead>
 
                   <tbody>
-                    {[tool, ...others.slice(0, 3)].map((item) => (
-                      <tr key={item.slug}>
-                        <td>
-                          <b>{item.name}</b>
-                        </td>
+                    {[tool, ...others.slice(0, 3)].map(
+                      (item) => (
+                        <tr key={item.slug}>
+                          <td>
+                            <b>{item.name}</b>
+                          </td>
 
-                        <td>{item.category}</td>
-                        <td>{item.score.toFixed(1)}</td>
+                          <td>{item.category}</td>
 
-                        <td>
-                          <Link to={`/reviews/${item.slug}`}>
-                            Read review
-                            <ArrowRight size={15} strokeWidth={2} />
-                          </Link>
-                        </td>
-                      </tr>
-                    ))}
+                          <td>
+                            {item.score.toFixed(1)}
+                          </td>
+
+                          <td>
+                            <Link
+                              to={`/reviews/${item.slug}`}
+                            >
+                              Read review
+                              <ArrowRight
+                                size={15}
+                                strokeWidth={2}
+                              />
+                            </Link>
+                          </td>
+                        </tr>
+                      )
+                    )}
                   </tbody>
                 </table>
               </div>
             </section>
 
             {/* Alternatives */}
-            <section id="alternatives" className="ledger-review-section">
-              <span className="ledger-overline">EXPLORE OPTIONS</span>
+            <section
+              id="alternatives"
+              className="ledger-review-section"
+            >
+              <span className="ledger-overline">
+                EXPLORE OPTIONS
+              </span>
 
               <h2>Alternatives to {tool.name}</h2>
 
@@ -426,6 +548,7 @@ export default function Review() {
                     </div>
 
                     <b>{item.score.toFixed(1)}</b>
+
                     <ArrowRight size={17} />
                   </Link>
                 ))}
@@ -433,14 +556,19 @@ export default function Review() {
             </section>
 
             {/* Reader Reviews */}
-            <section id="reader-reviews" className="ledger-review-section">
-              <span className="ledger-overline">COMMUNITY PERSPECTIVES</span>
+            <section
+              id="reader-reviews"
+              className="ledger-review-section"
+            >
+              <span className="ledger-overline">
+                COMMUNITY PERSPECTIVES
+              </span>
 
               <h2>Have you used {tool.name}?</h2>
 
               <p>
-                Share your experience with features, onboarding and pricing.
-                This prototype previews the submission experience.
+                Share your experience with features,
+                onboarding and pricing.
               </p>
 
               <form
@@ -466,58 +594,84 @@ export default function Review() {
                     >
                       <Star
                         size={25}
-                        fill={number <= rating ? '#f5b84c' : 'none'}
-                        color={number <= rating ? '#e8a72d' : '#9baac0'}
+                        fill={
+                          number <= rating
+                            ? "#f5b84c"
+                            : "none"
+                        }
+                        color={
+                          number <= rating
+                            ? "#e8a72d"
+                            : "#9baac0"
+                        }
                       />
                     </button>
                   ))}
 
                   <small>
-                    {rating ? `${rating} of 5 stars` : 'Select a rating'}
+                    {rating
+                      ? `${rating} of 5 stars`
+                      : "Select a rating"}
                   </small>
                 </div>
 
-                <label htmlFor="review-title">Review title</label>
+                <label htmlFor="review-title">
+                  Review title
+                </label>
 
                 <input
                   id="review-title"
                   required
                   value={title}
-                  onChange={(e) => setTitle(e.target.value)}
+                  onChange={(event) =>
+                    setTitle(event.target.value)
+                  }
                   placeholder="Summarize your experience"
                 />
 
-                <label htmlFor="review-body">Your review</label>
+                <label htmlFor="review-body">
+                  Your review
+                </label>
 
                 <textarea
                   id="review-body"
                   required
                   minLength={30}
                   value={body}
-                  onChange={(e) => setBody(e.target.value)}
+                  onChange={(event) =>
+                    setBody(event.target.value)
+                  }
                   placeholder="What worked well? What would you improve?"
                 />
 
                 <div className="ledger-form-grid">
                   <div>
-                    <label htmlFor="review-name">Your name</label>
+                    <label htmlFor="review-name">
+                      Your name
+                    </label>
 
                     <input
                       id="review-name"
                       required
                       value={name}
-                      onChange={(e) => setName(e.target.value)}
+                      onChange={(event) =>
+                        setName(event.target.value)
+                      }
                       placeholder="Name"
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="review-role">Your role</label>
+                    <label htmlFor="review-role">
+                      Your role
+                    </label>
 
                     <input
                       id="review-role"
                       value={role}
-                      onChange={(e) => setRole(e.target.value)}
+                      onChange={(event) =>
+                        setRole(event.target.value)
+                      }
                       placeholder="e.g. FinOps lead"
                     />
                   </div>
@@ -528,8 +682,11 @@ export default function Review() {
                     type="checkbox"
                     required
                     checked={confirmed}
-                    onChange={(e) => setConfirmed(e.target.checked)}
+                    onChange={(event) =>
+                      setConfirmed(event.target.checked)
+                    }
                   />
+
                   I confirm this reflects my own experience.
                 </label>
 
@@ -543,9 +700,12 @@ export default function Review() {
                 </button>
 
                 {submitted && (
-                  <p className="ledger-form-notice" role="status">
-                    ✓ Review submitted successfully! Thank you for sharing
-                    your experience.
+                  <p
+                    className="ledger-form-notice"
+                    role="status"
+                  >
+                    This is a demo form. Your review has
+                    not been saved or published.
                   </p>
                 )}
               </form>
@@ -558,11 +718,14 @@ export default function Review() {
               <h3>At a glance</h3>
 
               {[
-                ['Editor score', `${tool.score.toFixed(1)} / 10`],
-                ['Pricing', tool.price],
-                ['Best for', tool.best],
-                ['Category', tool.category],
-                ['Updated', 'October 2026'],
+                [
+                  "Editor score",
+                  `${tool.score.toFixed(1)} / 10`,
+                ],
+                ["Pricing", tool.price],
+                ["Best for", tool.best],
+                ["Category", tool.category],
+                ["Updated", "October 2026"],
               ].map(([key, value]) => (
                 <div key={key}>
                   <span>{key}</span>
@@ -574,7 +737,7 @@ export default function Review() {
                 className="ledger-btn"
                 href={tool.url}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
               >
                 Visit {tool.name}
                 <ExternalLink size={14} />
