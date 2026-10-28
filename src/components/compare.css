@@ -1,0 +1,131 @@
+/* Compare modal, matches The Cloud Ledger tokens */
+.cmp-overlay{position:fixed;inset:0;z-index:200;background:rgba(16,36,63,.55);backdrop-filter:blur(3px);display:grid;place-items:center;padding:24px;animation:cmpFade .18s ease-out}
+.cmp-panel{width:min(1040px,100%);max-height:calc(100vh - 48px);background:#fff;border-radius:20px;border:1px solid #dbe4f1;box-shadow:0 30px 90px rgba(16,36,63,.28);display:flex;flex-direction:column;overflow:hidden;animation:cmpRise .22s ease-out}
+.cmp-top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 28px;border-bottom:1px solid #e5ebf5}
+.cmp-top h2{margin:0;font-size:22px;color:#10243f;letter-spacing:-.04em}
+.cmp-close{border:1px solid #dbe4f1;background:#fff;border-radius:10px;width:40px;height:40px;display:grid;place-items:center;color:#10243f}
+.cmp-close:hover{background:#f1f5ff}
+.cmp-close:focus-visible,.cmp-select:focus-visible,.cmp-toggle input:focus-visible{outline:2px solid #2858e8;outline-offset:2px}
+.cmp-scroll{overflow-y:auto;flex:1}
+
+/* Shared 3-column grid: label | tool A | tool B */
+.cmp-heads,.cmp-row,.cmp-foot{display:grid;grid-template-columns:200px 1fr 1fr}
+
+.cmp-heads{position:sticky;top:0;z-index:2;background:#fff;border-bottom:1px solid #dbe4f1;box-shadow:0 8px 18px rgba(16,36,63,.05)}
+.cmp-heads-label{padding:20px 28px;display:flex;align-items:flex-end}
+.cmp-toggle{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:#465b77;cursor:pointer}
+.cmp-toggle input{accent-color:#2858e8;width:16px;height:16px}
+.cmp-head{padding:20px 24px;border-left:1px solid #e5ebf5;display:flex;flex-direction:column;gap:12px}
+.cmp-head-id{display:flex;align-items:center;gap:12px}
+.cmp-head-id strong{display:block;font-family:Manrope,sans-serif;font-size:18px;color:#10243f;letter-spacing:-.03em}
+.cmp-score{font-family:Manrope,sans-serif;font-weight:800;font-size:15px;color:#465b77;display:flex;align-items:center;gap:8px}
+.cmp-score.is-lead{color:#2858e8}
+.cmp-score small{font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;background:#eaf0ff;color:#2554d9;border-radius:20px;padding:2px 8px}
+.cmp-meter{height:6px;background:#e5eaf3;border-radius:8px;overflow:hidden}
+.cmp-meter i{display:block;height:100%;background:linear-gradient(90deg,#244cba,#4378f5);border-radius:8px;transition:width .3s}
+.cmp-select{appearance:auto;width:100%;border:1px solid #cbd8eb;border-radius:9px;padding:9px 10px;font:inherit;font-size:13px;color:#10243f;background:#fbfcff}
+.cmp-empty{margin:0;color:#60718a;font-size:13px}
+
+.cmp-group h3{margin:0;padding:22px 28px 10px;font-size:15px;color:#10243f}
+.cmp-row{border-top:1px solid #edf1f7}
+.cmp-row:nth-child(even){background:#fafcff}
+.cmp-label{padding:14px 28px;font-size:13px;font-weight:700;color:#10243f}
+.cmp-val{padding:14px 24px;font-size:13px;line-height:1.6;color:#465b77;border-left:1px solid #edf1f7}
+.cmp-row:not(.is-same) .cmp-val{color:#10243f}
+.cmp-row.is-same .cmp-val{color:#8a99b0}
+.cmp-val.is-missing{color:#a3afc2;font-style:italic}
+
+.cmp-list{list-style:none;margin:0;padding:14px 24px;border-left:1px solid #edf1f7;display:flex;flex-direction:column;gap:9px}
+.cmp-list li{display:flex;gap:8px;align-items:flex-start;font-size:13px;line-height:1.55;color:#10243f}
+.cmp-list svg{flex-shrink:0;margin-top:2px}
+.cmp-list.is-pros svg{color:#16a34a}
+.cmp-list.is-cons svg{color:#dc2626}
+
+.cmp-foot{border-top:1px solid #dbe4f1;background:#f7faff}
+.cmp-foot-actions{padding:16px 24px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;border-left:1px solid #e5ebf5}
+.cmp-foot-actions .ledger-btn{padding:10px 15px;font-size:12px}
+.cmp-visit{font-size:12px;font-weight:700;color:#2858e8;display:inline-flex;align-items:center;gap:5px}
+
+/* Compare triggers on the review page */
+.cmp-trigger{background:none;border:0;padding:0;cursor:pointer;font:inherit;display:flex;align-items:center;gap:5px;color:#2858e8;font-size:12px;font-weight:800;margin:13px 0;text-align:left}
+.cmp-trigger:hover{text-decoration:underline}
+.ledger-review-rating .cmp-open{width:100%;margin-top:10px}
+
+@keyframes cmpFade{from{opacity:0}}
+@keyframes cmpRise{from{opacity:0;transform:translateY(12px) scale(.985)}}
+@media (prefers-reduced-motion:reduce){.cmp-overlay,.cmp-panel{animation:none}.cmp-meter i{transition:none}}
+
+/* Mobile: full screen sheet, label sits above the two values */
+@media (max-width:760px){
+  .cmp-overlay{padding:0;place-items:end stretch}
+  .cmp-panel{max-height:100vh;height:100vh;border-radius:0}
+  .cmp-top{padding:16px 18px}
+  .cmp-top h2{font-size:18px}
+  .cmp-heads,.cmp-row,.cmp-foot{grid-template-columns:1fr 1fr}
+  .cmp-heads-label{grid-column:1/-1;padding:12px 18px 0}
+  .cmp-head{padding:14px 16px}
+  .cmp-head:nth-child(2){border-left:0}
+  .cmp-head-id .tool-logo{width:34px;height:34px}
+  .cmp-head-id strong{font-size:15px}
+  .cmp-label{grid-column:1/-1;padding:12px 16px 0;font-size:12px;color:#60718a}
+  .cmp-val,.cmp-list{padding:6px 16px 14px;font-size:12px}
+  .cmp-val:nth-child(2),.cmp-list:nth-child(2){border-left:0}
+  .cmp-group h3{padding:18px 16px 8px}
+  .cmp-foot>div:first-child{display:none}
+  .cmp-foot-actions{padding:12px 16px}
+  .cmp-foot-actions:nth-child(2){border-left:0}
+  .cmp-foot-actions .ledger-btn{width:100%}
+}
+
+/* Section jump links */
+.cmp-top{align-items:flex-start}
+.cmp-top-text{min-width:0}
+.cmp-nav{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.cmp-nav button{border:1px solid #dbe4f1;background:#fff;border-radius:30px;padding:6px 12px;font:inherit;font-size:12px;font-weight:700;color:#465b77;cursor:pointer}
+.cmp-nav button:hover{background:#eaf0ff;color:#2554d9;border-color:#cdddfb}
+.cmp-nav button:focus-visible,.cmp-more:focus-visible{outline:2px solid #2858e8;outline-offset:2px}
+.cmp-group{scroll-margin-top:150px}
+
+/* Long text cells */
+.cmp-long{margin:0;font-size:13px;line-height:1.65;color:inherit}
+.cmp-long.is-clamped{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.cmp-more{display:block;margin-top:6px;border:0;background:none;padding:0;font:inherit;font-size:12px;font-weight:800;color:#2858e8;cursor:pointer}
+.cmp-more:hover{text-decoration:underline}
+
+/* Feature bullets */
+.cmp-list.is-list svg{color:#2858e8}
+
+@media (max-width:760px){
+  .cmp-nav{overflow-x:auto;padding-bottom:2px; gap: 20px;}
+  .cmp-nav button{white-space:nowrap}
+  .cmp-label{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .cmp-more{margin-top:0}
+  .cmp-group{scroll-margin-top:190px}
+}
+/* Compare modal: tighter tablet and mobile layout */
+@media (max-width:960px){
+  .cmp-overlay{padding:16px}
+  .cmp-panel{max-height:calc(100vh - 32px)}
+  .cmp-heads,.cmp-row,.cmp-foot{grid-template-columns:150px 1fr 1fr}
+  .cmp-label,.cmp-heads-label,.cmp-group h3{padding-left:20px;padding-right:16px}
+  .cmp-val,.cmp-list,.cmp-head,.cmp-foot-actions{padding-left:18px;padding-right:18px}
+}
+@media (max-width:760px){
+  .cmp-overlay{padding:0}
+  .cmp-panel{max-height:100dvh;height:100dvh}
+  .cmp-heads,.cmp-row,.cmp-foot{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .cmp-head{gap:8px}
+  .cmp-meter{display:none}
+  .cmp-score small{display:none}
+  .cmp-head-id{gap:8px}
+  .cmp-head-id strong{font-size:14px;overflow-wrap:anywhere}
+  .cmp-select{padding:7px 8px;font-size:12px}
+  .cmp-nav{margin-right:-18px}
+  .cmp-foot-actions{flex-direction:column;align-items:stretch;gap:8px}
+  .cmp-foot-actions .ledger-btn{white-space:normal;text-align:center;padding:10px;font-size:12px}
+  .cmp-visit{justify-content:center}
+  .cmp-foot{padding-bottom:env(safe-area-inset-bottom)}
+}
+@media (min-width:761px) and (max-width:960px){
+  .cmp-foot-actions{flex-direction:column;align-items:flex-start;gap:8px}
+}

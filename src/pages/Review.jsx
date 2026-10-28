@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import React, { useState, useCallback } from "react";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowRight,
   ExternalLink,
@@ -7,10 +7,12 @@ import {
   ChevronRight,
   CheckCircle2,
   XCircle,
+  ArrowLeftRight,
 } from "lucide-react";
 
 import { tools, getTool } from "../data/tools";
 import { ToolLogo } from "../components/UI";
+import CompareModal from "../components/CompareModal";
 
 const anchors = [
   ["overview", "Overview"],
@@ -31,6 +33,22 @@ export default function Review() {
   const { slug } = useParams();
 
   const tool = getTool(slug);
+
+  // Compare modal state lives in the URL (?compare=nops) so it is shareable
+  const [searchParams, setSearchParams] = useSearchParams();
+  const compareSlug = searchParams.get("compare");
+  const openCompare = useCallback(
+    (otherSlug) => setSearchParams({ compare: otherSlug }),
+    [setSearchParams]
+  );
+  const changeCompare = useCallback(
+    (otherSlug) => setSearchParams({ compare: otherSlug }, { replace: true }),
+    [setSearchParams]
+  );
+  const closeCompare = useCallback(
+    () => setSearchParams({}, { replace: true }),
+    [setSearchParams]
+  );
 
   const [rating, setRating] = useState(0);
   const [submitted, setSubmitted] = useState(false);
@@ -157,6 +175,15 @@ export default function Review() {
               Visit {tool.name}
               <ExternalLink size={15} />
             </a>
+
+            <button
+              type="button"
+              className="ledger-btn ledger-btn-outline cmp-open"
+              onClick={() => openCompare(others[0]?.slug)}
+            >
+              <ArrowLeftRight size={15} />
+              Compare with another tool
+            </button>
           </div>
         </div>
       </div>
@@ -505,6 +532,16 @@ export default function Review() {
                           </td>
 
                           <td>
+                            {item.slug !== tool.slug && (
+                              <button
+                                type="button"
+                                className="cmp-trigger"
+                                style={{ margin: "0 0 6px" }}
+                                onClick={() => openCompare(item.slug)}
+                              >
+                                Compare side by side
+                              </button>
+                            )}
                             <Link
                               to={`/reviews/${item.slug}`}
                             >
@@ -748,18 +785,28 @@ export default function Review() {
               <h3>Compare {tool.name}</h3>
 
               {others.map((item) => (
-                <Link
+                <button
+                  type="button"
+                  className="cmp-trigger"
                   key={item.slug}
-                  to={`/reviews/${item.slug}`}
+                  onClick={() => openCompare(item.slug)}
                 >
                   {tool.name} vs {item.name}
                   <ArrowRight size={13} />
-                </Link>
+                </button>
               ))}
             </div>
           </aside>
         </div>
       </div>
+      {compareSlug && (
+        <CompareModal
+          baseSlug={tool.slug}
+          compareSlug={compareSlug}
+          onChangeCompare={changeCompare}
+          onClose={closeCompare}
+        />
+      )}
     </main>
   );
 }
